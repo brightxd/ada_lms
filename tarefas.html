@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tarefas — To-Do List</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <span class="header-icon">✅</span>
+  <h1>To-Do List</h1>
+</header>
+
+<nav class="breadcrumb">
+  <a href="index.html">Usuários</a>
+  <span>›</span>
+  <a href="listas.html">Ana Silva</a>
+  <span>›</span>
+  <span>Trabalho</span>
+</nav>
+
+<main>
+  <div class="section-header">
+    <div>
+      <h2>Trabalho</h2>
+      <p>3 tarefas</p>
+    </div>
+    <a href="#modal-task" class="btn btn-primary">+ Nova tarefa</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><strong>3</strong>Total</div>
+    <div class="stat"><strong>1</strong>Concluídas</div>
+    <div class="stat"><strong>2</strong>Pendentes</div>
+  </div>
+
+  <div class="task-list">
+    <div class="task-item">
+      <div class="checkbox"></div>
+      <span class="task-title">Preparar apresentação</span>
+      <button class="btn btn-danger btn-sm">🗑</button>
+    </div>
+
+    <div class="task-item done">
+      <div class="checkbox checked"></div>
+      <span class="task-title">Responder e-mails</span>
+      <button class="btn btn-danger btn-sm">🗑</button>
+    </div>
+
+    <div class="task-item">
+      <div class="checkbox"></div>
+      <span class="task-title">Reunião às 14h</span>
+      <button class="btn btn-danger btn-sm">🗑</button>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <h3>Nova Tarefa</h3>
+    <div class="form-group">
+      <label for="inp-task-title">Descrição</label>
+      <input id="inp-task-title" type="text" placeholder="Ex: Estudar JavaScript">
+    </div>
+    <div class="modal-actions">
+      <a href="#" class="btn btn-ghost">Cancelar</a>
+      <button class="btn btn-primary">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

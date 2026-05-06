@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuários — To-Do List</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <span class="header-icon">✅</span>
+  <h1>To-Do List</h1>
+</header>
+
+<nav class="breadcrumb">
+  <span>Usuários</span>
+</nav>
+
+<main>
+  <div class="section-header">
+    <div>
+      <h2>Usuários</h2>
+      <p>Selecione um usuário para gerenciar suas listas</p>
+    </div>
+    <a href="#modal-user" class="btn btn-primary">+ Novo usuário</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><strong>3</strong>Usuários</div>
+    <div class="stat"><strong>4</strong>Listas</div>
+    <div class="stat"><strong>9</strong>Tarefas</div>
+    <div class="stat"><strong>4</strong>Concluídas</div>
+  </div>
+
+  <div class="grid">
+    <a href="listas.html" class="card clickable">
+      <div class="avatar">AS</div>
+      <div class="card-title">Ana Silva</div>
+      <div class="card-sub">ana@email.com</div>
+      <div class="badges">
+        <span class="badge badge-purple">2 listas</span>
+        <span class="badge badge-green">2/5 concluídas</span>
+      </div>
+    </a>
+
+    <a href="listas.html" class="card clickable">
+      <div class="avatar">BC</div>
+      <div class="card-title">Bruno Costa</div>
+      <div class="card-sub">bruno@email.com</div>
+      <div class="badges">
+        <span class="badge badge-purple">1 lista</span>
+        <span class="badge badge-green">0/2 concluídas</span>
+      </div>
+    </a>
+
+    <a href="listas.html" class="card clickable">
+      <div class="avatar">CM</div>
+      <div class="card-title">Carla Mendes</div>
+      <div class="card-sub">carla@email.com</div>
+      <div class="badges">
+        <span class="badge badge-purple">1 lista</span>
+        <span class="badge badge-green">1/2 concluídas</span>
+      </div>
+    </a>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-user">
+  <div class="modal">
+    <h3>Novo Usuário</h3>
+    <div class="form-group">
+      <label for="inp-user-name">Nome</label>
+      <input id="inp-user-name" type="text" placeholder="Ex: João Silva">
+    </div>
+    <div class="form-group">
+      <label for="inp-user-email">E-mail</label>
+      <input id="inp-user-email" type="email" placeholder="Ex: joao@email.com">
+    </div>
+    <div class="modal-actions">
+      <a href="#" class="btn btn-ghost">Cancelar</a>
+      <button class="btn btn-primary">Criar</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
