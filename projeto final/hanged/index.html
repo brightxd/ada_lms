@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hangman</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 560px;
+    }
+
+    h1 { font-size: 2rem; color: #e94560; letter-spacing: 2px; }
+
+    .gallows { background: #16213e; border-radius: 12px; padding: 1rem; }
+
+    .hint { font-size: 0.9rem; color: #aaa; font-style: italic; text-align: center; max-width: 420px; }
+
+    .word-display { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+
+    .letter-slot {
+      width: 2.2rem;
+      height: 2.8rem;
+      border-bottom: 3px solid #e94560;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #0f3460;
+      transition: color 0.3s;
+    }
+    .letter-slot.revealed { color: #eee; }
+
+    .info { font-size: 1rem; color: #aaa; }
+    .info span { color: #eee; font-weight: bold; }
+
+    .feedback { font-size: 1rem; min-height: 1.5rem; }
+    .feedback.hit  { color: #2ecc71; }
+    .feedback.miss { color: #e94560; }
+
+    .message { font-size: 1.3rem; font-weight: bold; text-align: center; }
+    .message.win  { color: #2ecc71; }
+    .message.lose { color: #e94560; }
+
+    .keyboard { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; max-width: 480px; }
+
+    .key {
+      width: 2.4rem;
+      height: 2.4rem;
+      border: none;
+      border-radius: 6px;
+      background: #0f3460;
+      color: #eee;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .key:hover:not(:disabled) { background: #e94560; transform: scale(1.1); }
+    .key:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+    .key.hit  { background: #2ecc71; opacity: 0.7; }
+    .key.miss { background: #e94560; opacity: 0.7; }
+
+    .restart {
+      padding: 0.6rem 2rem;
+      background: #e94560;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .restart:hover { background: #c73652; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+
+  <script>
+    const { useState, useEffect, useCallback, createElement: ce } = React;
+
+    const WORD_BANK = [
+      "algorithm", "variable",  "function",  "interface", "component",
+      "browser",   "database",  "network",   "keyboard",  "monitor",
+      "software",  "hardware",  "terminal",  "compiler",  "framework",
+      "operator",  "iterator",  "callback",  "promise",   "module",
+    ];
+
+    const MAX_ERRORS = 6;
+    const DICT_API   = "https://api.dictionaryapi.dev/api/v2/entries/en";
+
+    function Gallows({ errors }) {
+      return ce("svg", { className: "gallows", width: "200", height: "220", viewBox: "0 0 200 220" },
+        ce("line", { x1:"20",  y1:"210", x2:"180", y2:"210", stroke:"#e94560", strokeWidth:"4" }),
+        ce("line", { x1:"60",  y1:"210", x2:"60",  y2:"20",  stroke:"#e94560", strokeWidth:"4" }),
+        ce("line", { x1:"60",  y1:"20",  x2:"130", y2:"20",  stroke:"#e94560", strokeWidth:"4" }),
+        ce("line", { x1:"130", y1:"20",  x2:"130", y2:"45",  stroke:"#e94560", strokeWidth:"4" }),
+        errors > 0 && ce("circle", { cx:"130", cy:"60",  r:"15",            stroke:"#eee", strokeWidth:"3", fill:"none" }),
+        errors > 1 && ce("line",   { x1:"130", y1:"75",  x2:"130", y2:"130", stroke:"#eee", strokeWidth:"3" }),
+        errors > 2 && ce("line",   { x1:"130", y1:"90",  x2:"105", y2:"115", stroke:"#eee", strokeWidth:"3" }),
+        errors > 3 && ce("line",   { x1:"130", y1:"90",  x2:"155", y2:"115", stroke:"#eee", strokeWidth:"3" }),
+        errors > 4 && ce("line",   { x1:"130", y1:"130", x2:"105", y2:"160", stroke:"#eee", strokeWidth:"3" }),
+        errors > 5 && ce("line",   { x1:"130", y1:"130", x2:"155", y2:"160", stroke:"#eee", strokeWidth:"3" }),
+      );
+    }
+
+    function WordDisplay({ word, guessed }) {
+      return ce("div", { className: "word-display" },
+        ...[...word].map((letter, i) =>
+          ce("div", { key: i, className: `letter-slot${guessed.has(letter) ? " revealed" : ""}` },
+            guessed.has(letter) ? letter.toUpperCase() : ""
+          )
+        )
+      );
+    }
+
+    function Keyboard({ word, guessed, onGuess, disabled }) {
+      return ce("div", { className: "keyboard" },
+        ..."abcdefghijklmnopqrstuvwxyz".split("").map(letter => {
+          const used   = guessed.has(letter);
+          const isHit  = used && word.includes(letter);
+          const isMiss = used && !word.includes(letter);
+          return ce("button", {
+            key: letter,
+            className: `key${isHit ? " hit" : ""}${isMiss ? " miss" : ""}`,
+            disabled: used || disabled,
+            onClick: () => onGuess(letter),
+          }, letter.toUpperCase());
+        })
+      );
+    }
+
+    function App() {
+      const [word,     setWord]     = useState("");
+      const [hint,     setHint]     = useState("");
+      const [loading,  setLoading]  = useState(true);
+      const [guessed,  setGuessed]  = useState(new Set());
+      const [errors,   setErrors]   = useState(0);
+      const [feedback, setFeedback] = useState({ text: "", type: "" });
+
+      const won      = word.length > 0 && [...word].every(c => guessed.has(c));
+      const lost     = errors >= MAX_ERRORS;
+      const gameOver = won || lost;
+
+      const startGame = useCallback(async () => {
+        setLoading(true);
+        setWord(""); setHint(""); setGuessed(new Set()); setErrors(0); setFeedback({ text: "", type: "" });
+
+        const shuffled = [...WORD_BANK].sort(() => Math.random() - 0.5);
+        let picked     = shuffled[0];
+        let definition = "";
+
+        for (const candidate of shuffled.slice(0, 4)) {
+          try {
+            const res  = await fetch(`${DICT_API}/${candidate}`);
+            if (!res.ok) continue;
+            const data = await res.json();
+            const def  = data[0]?.meanings[0]?.definitions[0]?.definition;
+            if (def) { picked = candidate; definition = def; break; }
+          } catch { continue; }
+        }
+
+        setWord(picked);
+        setHint(definition || "No hint available.");
+        setLoading(false);
+      }, []);
+
+      useEffect(() => { startGame(); }, [startGame]);
+
+      const handleGuess = useCallback((letter) => {
+        if (gameOver || guessed.has(letter)) return;
+        const next = new Set(guessed);
+        next.add(letter);
+        setGuessed(next);
+        if (word.includes(letter)) {
+          setFeedback({ text: `✔ "${letter.toUpperCase()}" is in the word!`, type: "hit" });
+        } else {
+          setErrors(e => e + 1);
+          setFeedback({ text: `✘ "${letter.toUpperCase()}" is not in the word.`, type: "miss" });
+        }
+      }, [gameOver, guessed, word]);
+
+      useEffect(() => {
+        const handler = (e) => { if (/^[a-z]$/i.test(e.key)) handleGuess(e.key.toLowerCase()); };
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+      }, [handleGuess]);
+
+      if (loading) {
+        return ce("div", { className: "app" },
+          ce("h1", null, "🪢 Hangman"),
+          ce("p", { className: "hint" }, "Fetching word…")
+        );
+      }
+
+      return ce("div", { className: "app" },
+        ce("h1", null, "🪢 Hangman"),
+        ce(Gallows, { errors }),
+        ce("p", { className: "hint" }, "💡 " + hint),
+        ce(WordDisplay, { word, guessed }),
+        ce("p", { className: "info" }, "Errors: ", ce("span", null, errors), " / " + MAX_ERRORS),
+        !gameOver && feedback.text && ce("p", { className: `feedback ${feedback.type}` }, feedback.text),
+        won  && ce("p", { className: "message win"  }, "🎉 You won! The word was ",   ce("strong", null, word.toUpperCase()), "."),
+        lost && ce("p", { className: "message lose" }, "💀 Game over! The word was ", ce("strong", null, word.toUpperCase()), "."),
+        ce(Keyboard, { word, guessed, onGuess: handleGuess, disabled: gameOver }),
+        gameOver && ce("button", { className: "restart", onClick: startGame }, "Play Again"),
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(ce(App, null));
+  </script>
+</body>
+</html>
